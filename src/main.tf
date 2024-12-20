@@ -1,6 +1,6 @@
 locals {
   quotas           = module.this.enabled ? { for k, v in var.quotas : k => v if v != null } : {}
-  service_name_set = toset(compact(values(local.quotas).*.service_name))
+  service_name_set = toset(compact(values(local.quotas)[*].service_name))
 
   quotas_with_service_codes = { for k, quota in local.quotas : k => {
     service_code = quota.service_code != null ? quota.service_code : data.aws_servicequotas_service.by_name[quota.service_name].service_code

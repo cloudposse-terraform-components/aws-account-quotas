@@ -1,0 +1,17 @@
+components:
+  terraform:
+    account-quotas/disabled:
+      metadata:
+        component: target
+      vars:
+        enabled: false
+        quotas:
+          vpcs-per-region:
+            service_code: vpc
+            quota_name: "VPCs per Region"
+            value: 10
+          vpc-elastic-ips:
+            service_code: ec2
+            quota_name: "EC2-VPC Elastic IPs"
+            value: 10
+

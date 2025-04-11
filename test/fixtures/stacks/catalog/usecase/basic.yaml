@@ -1,0 +1,12 @@
+components:
+  terraform:
+    account-quotas/basic:
+      metadata:
+        component: target
+      vars:
+        enabled: true
+        quotas:
+          robomaker-applications:
+            service_code: robomaker
+            quota_name: "Simulation applications"
+            value: 20

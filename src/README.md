@@ -12,8 +12,6 @@ We recommend making requests here rather than in `account-settings` because
 `account-settings` is a restricted component that can only be applied by SuperAdmin.
 ## Usage
 
-## Usage
-
 **Stack Level**: Global and Regional (depending on quota)
 
 Global resources must be provisioned in `us-east-1`. Put them in the `gbl` stack,

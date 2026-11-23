@@ -71,7 +71,7 @@ func (s *ComponentSuite) TestBasic() {
 	assert.Equal(s.T(), quotas["robomaker-applications"].UsageMetric[0].MetricNamespace, "AWS/Usage")
 	assert.Equal(s.T(), quotas["robomaker-applications"].UsageMetric[0].MetricStatisticRecommendation, "Maximum")
 	assert.NotNil(s.T(), quotas["robomaker-applications"].ValueReported)
-	assert.Equal(s.T(), quotas["robomaker-applications"].ValueRequested, 20.0)
+	assert.Equal(s.T(), quotas["robomaker-applications"].ValueRequested, 40.0)
 
 	s.DriftTest(component, stack, nil)
 }

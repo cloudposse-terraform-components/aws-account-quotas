@@ -50,6 +50,14 @@ usage: |-
   old resource has no actual effect (it does not even close an open request), so it is
   safe to do.
 
+  #### Requested value must not be below the current quota
+
+  With AWS provider 6.9.0 and later, creating a quota fails with `requesting Service
+  Quotas Service Quota (...) with value less than current` when `value` is below the
+  quota currently applied to the account. Earlier provider versions silently accepted
+  such a value. Set `value` to at least the current quota, which you can check with
+  `aws service-quotas get-service-quota --service-code <code> --quota-code <code>`.
+
   ### Example
 
   Here's an example snippet for how to use this component.

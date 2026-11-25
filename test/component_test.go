@@ -1,14 +1,44 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	awssdk "github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	helper "github.com/cloudposse/test-helpers/pkg/atmos/component-helper"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/cloudposse/test-helpers/pkg/atmos"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+const (
+	quotaRegion      = "us-east-2"
+	quotaServiceCode = "robomaker"
+	quotaCode        = "L-D6554FB1"
+)
+
+// currentQuotaValue returns the quota value currently applied in the test
+// account. Since AWS provider 6.9.0, aws_servicequotas_service_quota refuses
+// to request a value below the current one, and the current value differs
+// between accounts, so the test requests exactly the current value.
+func currentQuotaValue(s *ComponentSuite) float64 {
+	cfg, err := awsconfig.LoadDefaultConfig(context.Background(), awsconfig.WithRegion(quotaRegion))
+	require.NoError(s.T(), err)
+
+	out, err := servicequotas.NewFromConfig(cfg).GetServiceQuota(context.Background(), &servicequotas.GetServiceQuotaInput{
+		ServiceCode: awssdk.String(quotaServiceCode),
+		QuotaCode:   awssdk.String(quotaCode),
+	})
+	require.NoError(s.T(), err)
+	require.NotNil(s.T(), out.Quota)
+	require.NotNil(s.T(), out.Quota.Value)
+
+	return *out.Quota.Value
+}
 
 type ComponentSuite struct {
 	helper.TestSuite
@@ -48,8 +78,19 @@ func (s *ComponentSuite) TestBasic() {
 	const component = "account-quotas/basic"
 	const stack = "default-test"
 
-	defer s.DestroyAtmosComponent(s.T(), component, stack, nil)
-	options, _ := s.DeployAtmosComponent(s.T(), component, stack, nil)
+	currentValue := currentQuotaValue(s)
+	inputs := map[string]interface{}{
+		"quotas": map[string]interface{}{
+			"robomaker-applications": map[string]interface{}{
+				"service_code": quotaServiceCode,
+				"quota_name":   "Simulation applications",
+				"value":        currentValue,
+			},
+		},
+	}
+
+	defer s.DestroyAtmosComponent(s.T(), component, stack, &inputs)
+	options, _ := s.DeployAtmosComponent(s.T(), component, stack, &inputs)
 
 	var quotas map[string]ServiceQuota
 	atmos.OutputStruct(s.T(), options, "quotas", &quotas)
@@ -71,9 +112,9 @@ func (s *ComponentSuite) TestBasic() {
 	assert.Equal(s.T(), quotas["robomaker-applications"].UsageMetric[0].MetricNamespace, "AWS/Usage")
 	assert.Equal(s.T(), quotas["robomaker-applications"].UsageMetric[0].MetricStatisticRecommendation, "Maximum")
 	assert.NotNil(s.T(), quotas["robomaker-applications"].ValueReported)
-	assert.Equal(s.T(), quotas["robomaker-applications"].ValueRequested, 20.0)
+	assert.Equal(s.T(), quotas["robomaker-applications"].ValueRequested, currentValue)
 
-	s.DriftTest(component, stack, nil)
+	s.DriftTest(component, stack, &inputs)
 }
 
 func (s *ComponentSuite) TestEnabledFlag() {

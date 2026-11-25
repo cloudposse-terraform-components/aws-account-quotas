@@ -9,4 +9,4 @@ components:
           robomaker-applications:
             service_code: robomaker
             quota_name: "Simulation applications"
-            value: 20
+            value: 40
